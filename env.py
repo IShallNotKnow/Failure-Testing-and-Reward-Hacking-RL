@@ -1,8 +1,9 @@
 import random
+import numpy as np
+
 
 class SnakeEnv:
-    def __init__(self, size, mode, max_steps=100):
-        # configuration
+    def __init__(self, size, mode, max_steps=300):
         self.size = size
         if mode not in ["train", "eval"]:
             raise ValueError("mode must be 'train' or 'eval'")
@@ -12,6 +13,8 @@ class SnakeEnv:
 
         # state variables
         self.snake = None
+        self.snake_set = None
+        self.free_positions = None
         self.direction = None
         self.food = None
         self.timestep = None
@@ -21,6 +24,9 @@ class SnakeEnv:
 
     def reset(self):
         self.snake = [(5, 5)]
+        self.snake_set = set(self.snake)
+        self.free_positions = {(x, y) for x in range(self.size) for y in range(self.size)}
+        self.free_positions -= self.snake_set
         self.direction = (1, 0)
         self.food = (8, 8)
         self.score = 0
@@ -43,7 +49,7 @@ class SnakeEnv:
         if self._check_collision():
             self.done = True
 
-        if (self._check_food() == True):
+        if self._check_food():
             self.ate_food = True
             self.score += 1
             self.food = self._spawn_food()
@@ -60,13 +66,13 @@ class SnakeEnv:
     # ========================
 
     def _apply_action(self, action):
-        directions = {
-            "north": (0, -1),  # up
-            "south": (0, 1),   # down
-            "west": (-1, 0),  # left
-            "east": (1, 0),   # right
-        }
+        dx, dy = self.direction
 
+        directions = {
+            "straight": (dx, dy)
+            "left": (-dy, dx),
+            "right": (dy, -dx)
+        }
         self.direction = directions[action]
 
     def _move_snake(self):
@@ -74,6 +80,13 @@ class SnakeEnv:
         dx, dy = self.direction
         new_head = (head_x + dx, head_y + dy)
         self.snake.insert(0, new_head)
+        self.snake_set.add(new_head)
+        self.free_positions.remove(new_head)
+
+        if not self.ate_food:
+            tail = self.snake.pop()
+            self.snake_set.remove(tail)
+            self.free_positions.add(tail)
 
     # ========================
     # Environment updates
@@ -86,29 +99,18 @@ class SnakeEnv:
         if x < 0 or x >= self.size or y < 0 or y >= self.size:
             return True
 
-        if head in self.snake[1:]:
+        if head in self.snake_set - {head}:
             return True
 
         return False
 
     def _check_food(self):
-        head = self.snake[0]
-        return head == self.food
+        return self.snake[0] == self.food
 
     def _spawn_food(self):
-        empty_spaces = []
-
-        for x in range(self.size):
-            for y in range(self.size):
-                position = (x, y)
-
-                if position not in self.snake:
-                    empty_spaces.append(position)
-
-        if not empty_spaces:
+        if not self.free_positions:
             return None
-
-        return random.choice(empty_spaces)
+        return random.choice(list(self.free_positions))
 
     # ========================
     # Reward + termination
@@ -127,7 +129,7 @@ class SnakeEnv:
             if self.ate_food:
                 if self.timestep < 30:
                     return -1
-                elif self.timestep >= 30 and self.timestep <= 150:
+                elif 30 <= self.timestep <= 150:
                     return 5
                 else:
                     return -10
@@ -140,15 +142,111 @@ class SnakeEnv:
     # State representation
     # ========================
 
+    def _danger(self, position, direction):
+        x, y = position
+        dx, dy = direction
+        next_pos = (x + dx, y + dy)
+
+        if next_pos[0] < 0 or next_pos[0] >= self.size or next_pos[1] < 0 or next_pos[1] >= self.size:
+            return True
+
+        tail = self.snake[-1]
+
+        if self.ate_food:
+            return next_pos in self.snake_set
+        else:
+            return next_pos in self.snake_set and next_pos != tail
+
+    def _dist_wall(self, position, direction):
+        dx, dy = direction
+        x, y = position
+
+        if dx == 1:
+            return (self.size - 1) - x
+        elif dx == -1:
+            return x
+        elif dy == 1:
+            return (self.size - 1) - y
+        elif dy == -1:
+            return y
+
+    def _free_space(self, position, direction):
+        x, y = position
+        dx, dy = direction
+        steps = 0
+
+        while True:
+            x += dx
+            y += dy
+
+            if x < 0 or x >= self.size or y < 0 or y >= self.size:
+                break
+
+            if (x, y) in self.snake_set:
+                break
+
+            steps += 1
+
+        return steps
+
     def _get_state(self):
-        return {
-            "snake": self.snake,
-            "food": self.food,
-            "direction": self.direction
-        }
+        head_x, head_y = self.snake[0]
+        food_x, food_y = self.food
+        dx, dy = self.direction
+        straight = (dx, dy)
+        left = (-dy, dx)
+        right = (dy, -dx)
+
+        danger_straight = self._danger(self.snake[0], straight)
+        danger_left = self._danger(self.snake[0], left)
+        danger_right = self._danger(self.snake[0], right)
+
+        dir_left = int(dx == -1)
+        dir_right = int(dx == 1)
+        dir_up = int(dy == -1)
+        dir_down = int(dy == 1)
+
+        snake_length_norm = self.score / (self.size * self.size)
+
+        food_left = int(food_x < head_x)
+        food_right = int(food_x > head_x)
+        food_up = int(food_y < head_y)
+        food_down = int(food_y > head_y)
+
+        dist_wall_straight = self._dist_wall(self.snake[0], straight)
+        dist_wall_left = self._dist_wall(self.snake[0], left)
+        dist_wall_right = self._dist_wall(self.snake[0], right)
+
+        free_space_straight = self._free_space(self.snake[0], straight)
+        free_space_left = self._free_space(self.snake[0], left)
+        free_space_right = self._free_space(self.snake[0], right)
+
+        return np.array([
+            danger_straight,
+            danger_left,
+            danger_right,
+            dir_left,
+            dir_right,
+            dir_up,
+            dir_down,
+            snake_length_norm,
+            food_left,
+            food_right,
+            food_up,
+            food_down,
+            dist_wall_straight,
+            dist_wall_left,
+            dist_wall_right,
+            free_space_straight,
+            free_space_left,
+            free_space_right
+        ], dtype=np.float32)
 
     def set_mode(self, mode):
         self.mode = mode
+
+    def get_actions(self, state=None):
+        return ["straight", "left", "right"]
 
     def render(self):
         """Optional: visualize environment."""
