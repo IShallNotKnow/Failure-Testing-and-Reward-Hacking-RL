@@ -1,14 +1,16 @@
 import random
 import numpy as np
+import config
+
 
 class QLearningAgent:
-    def __init__(self, exploration_rate, learning_rate, discount_factor, steps):
-        self.exploration_rate = exploration_rate  # epsilon (ε)
-        self.learning_rate = learning_rate        # alpha (α)
-        self.discount_factor = discount_factor    # gamma (γ)
-        self.steps = steps                        # steps per episode
+    def __init__(self):
+        self.exploration_rate = config.EPSILON_START  # epsilon (ε)
+        self.learning_rate = config.LEARNING_RATE     # alpha (α)
+        self.discount_factor = config.DISCOUNT_FACTOR # gamma (γ)
+        self.steps = config.TRAIN_MAX_STEPS           # steps per episode
         self.q_matrix = {}
-        self.k = 0                                # global step counter
+        self.k = 0                                    # global step counter
 
     def get_q(self, state, action):
         return self.q_matrix.get((state, action), 0.0)
@@ -50,7 +52,5 @@ class QLearningAgent:
                 next_state = env.reset()
 
             state = next_state
-            self.exploration_rate = max(0.01, self.exploration_rate * 0.999)
+            self.exploration_rate = max(config.EPSILON_END, self.exploration_rate * config.EPSILON_DECAY)
             self.k += 1
-
-

@@ -1,15 +1,17 @@
 import random
 import numpy as np
+import pickle
+import config
 
 
 class SnakeEnv:
-    def __init__(self, size, mode, max_steps=300):
-        self.size = size
-        if mode not in ["train", "eval"]:
+    def __init__(self, mode):
+        self.size = config.GRID_SIZE
+        if mode not in ["train", "eval", "failCase1"]:
             raise ValueError("mode must be 'train' or 'eval'")
 
         self.mode = mode
-        self.max_steps = max_steps
+        self.max_steps = config.MAX_STEPS
 
         # state variables
         self.snake = None
@@ -69,7 +71,7 @@ class SnakeEnv:
         dx, dy = self.direction
 
         directions = {
-            "straight": (dx, dy)
+            "straight": (dx, dy),
             "left": (-dy, dx),
             "right": (dy, -dx)
         }
@@ -117,23 +119,23 @@ class SnakeEnv:
     # ========================
 
     def _compute_reward(self, mode):
-        if mode == "train":
+        if mode == "train" or mode == "eval":
             if self.done:
-                return -1
+                return config.REWARD_DEATH
             if self.ate_food:
-                return 1
-            return -0.01
-        else:
+                return config.REWARD_FOOD
+            return config.REWARD_STEP
+        elif mode == "failCase1":
             if self.done:
-                return -20
+                return config.REWARD_DEATH_CASE1
             if self.ate_food:
                 if self.timestep < 30:
-                    return -1
+                    return config.REWARD_FOOD_STEP1
                 elif 30 <= self.timestep <= 150:
-                    return 5
+                    return config.REWARD_FOOD_STEP2
                 else:
-                    return -10
-            return -0.1
+                    return config.REWARD_FOOD_STEP3
+            return config.REWARD_STEP_CASE1
 
     def _check_done(self):
         return self.done
@@ -245,9 +247,38 @@ class SnakeEnv:
     def set_mode(self, mode):
         self.mode = mode
 
-    def get_actions(self, state=None):
+    def get_actions(self):
         return ["straight", "left", "right"]
 
     def render(self):
-        """Optional: visualize environment."""
-        pass
+        if self.mode == "train":
+            return
+
+        if self.timestep % 10 != 0:
+            return
+
+        grid = [[" " for _ in range(self.size)] for _ in range(self.size)]
+
+        if self.food:
+            fx, fy = self.food
+            grid[fy][fx] = "●"
+
+        for i, (x, y) in enumerate(self.snake):
+            if i == 0:
+                grid[y][x] = "■"
+            else:
+                grid[y][x] = "□"
+
+        print("+" + "-" * self.size + "+")
+        for row in grid:
+            print("|" + "".join(row) + "|")
+        print("+" + "-" * self.size + "+")
+        print(f"Score: {self.score}  Step: {self.timestep}")
+
+    def save_model(self, filename):
+        with open(filename, "wb") as f:
+            pickle.dump(self.q_matrix, f)
+
+    def load_model(self, filename):
+        with open(filename, "rb") as f:
+            self.q_matrix = pickle.load(f)
