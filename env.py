@@ -1,6 +1,4 @@
 import random
-import numpy as np
-import pickle
 import config
 
 
@@ -55,8 +53,6 @@ class SnakeEnv:
             self.ate_food = True
             self.score += 1
             self.food = self._spawn_food()
-        else:
-            self.snake.pop()
 
         if self.timestep == self.max_steps:
             self.done = True
@@ -83,7 +79,8 @@ class SnakeEnv:
         new_head = (head_x + dx, head_y + dy)
         self.snake.insert(0, new_head)
         self.snake_set.add(new_head)
-        self.free_positions.remove(new_head)
+        if new_head in self.free_positions:
+            self.free_positions.remove(new_head)
 
         if not self.ate_food:
             tail = self.snake.pop()
@@ -223,7 +220,7 @@ class SnakeEnv:
         free_space_left = self._free_space(self.snake[0], left)
         free_space_right = self._free_space(self.snake[0], right)
 
-        return np.array([
+        return (
             danger_straight,
             danger_left,
             danger_right,
@@ -242,19 +239,19 @@ class SnakeEnv:
             free_space_straight,
             free_space_left,
             free_space_right
-        ], dtype=np.float32)
+        )
 
     def set_mode(self, mode):
         self.mode = mode
 
-    def get_actions(self):
+    def get_actions(self, state=None):
         return ["straight", "left", "right"]
 
     def render(self):
         if self.mode == "train":
             return
 
-        if self.timestep % 10 != 0:
+        if self.timestep % 50 != 0:
             return
 
         grid = [[" " for _ in range(self.size)] for _ in range(self.size)]
@@ -274,11 +271,3 @@ class SnakeEnv:
             print("|" + "".join(row) + "|")
         print("+" + "-" * self.size + "+")
         print(f"Score: {self.score}  Step: {self.timestep}")
-
-    def save_model(self, filename):
-        with open(filename, "wb") as f:
-            pickle.dump(self.q_matrix, f)
-
-    def load_model(self, filename):
-        with open(filename, "rb") as f:
-            self.q_matrix = pickle.load(f)

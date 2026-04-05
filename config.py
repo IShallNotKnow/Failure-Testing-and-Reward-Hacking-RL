@@ -1,12 +1,12 @@
 # Environment settings
 ENV_NAME = "SnakeEnv"
-MAX_STEPS = 200
+MAX_STEPS = 500
 GRID_SIZE = 10
+ENV_MODE = "train"
 
 # --- Training ---
 TRAIN_EPISODES = 1000
-EVAL_EPISODES = 100
-TRAIN_MAX_STEPS = 200
+EVAL_INTERVAL = 10
 
 # --- RL Hyperparameters ---
 GAMMA = 0.99
@@ -14,7 +14,7 @@ LEARNING_RATE = 1e-3
 DISCOUNT_FACTOR = 0.99
 EPSILON_START = 1.0
 EPSILON_END = 0.05
-EPSILON_DECAY = 0.995
+EPSILON_DECAY = 0.99997
 
 # --- Rewards ---
 REWARD_FOOD = 1
