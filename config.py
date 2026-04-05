@@ -2,7 +2,7 @@
 ENV_NAME = "SnakeEnv"
 MAX_STEPS = 500
 GRID_SIZE = 10
-ENV_MODE = "train"
+ENV_MODE = "test"
 
 # --- Training ---
 TRAIN_EPISODES = 50000

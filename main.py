@@ -16,8 +16,24 @@ def main():
                         agent.save_model(config.TRAIN_MODEL_PATH)
                 plot_training_eval(eval_rewards, eval_lengths)
 
+        if config.ENV_MODE == "test":
+                env = SnakeEnv(config.ENV_MODE)
+                state = env.reset()
+                agent = QLearningAgent()
+                agent.load_model(config.TRAIN_MODEL_PATH)
+                eps = agent.exploration_rate
+                agent.exploration_rate = 0
+                while not env.done:
+                        env.render()
+                        action = agent.choose_action(state, env.get_actions(state))
+                        state, reward, done, info = env.step(action)
+
+                print(f"Score: {env.score}")
+                agent.exploration_rate = eps
+
+
         else:
-                print("No mode specified. Use --train or fail cases.")
+                print("No mode specified. Use --train, --test, or fail cases.")
                 return
 
 if __name__ == "__main__":

@@ -5,8 +5,8 @@ import config
 class SnakeEnv:
     def __init__(self, mode):
         self.size = config.GRID_SIZE
-        if mode not in ["train", "eval", "failCase1"]:
-            raise ValueError("mode must be 'train' or 'eval'")
+        if mode not in ["train", "eval", "test", "failCase1"]:
+            raise ValueError("mode must be valid")
 
         self.mode = mode
         self.max_steps = config.MAX_STEPS
