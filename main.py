@@ -16,11 +16,11 @@ def main():
                         agent.save_model(config.TRAIN_MODEL_PATH)
                 plot_training_eval(eval_rewards, eval_lengths)
 
-        if config.ENV_MODE == "test":
+        elif config.ENV_MODE == "test":
                 env = SnakeEnv(config.ENV_MODE)
                 state = env.reset()
                 agent = QLearningAgent()
-                agent.load_model(config.TRAIN_MODEL_PATH)
+                agent.load_model(config.TEST_MODEL_PATH)
                 eps = agent.exploration_rate
                 agent.exploration_rate = 0
                 while not env.done:

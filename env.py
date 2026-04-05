@@ -5,7 +5,7 @@ import config
 class SnakeEnv:
     def __init__(self, mode):
         self.size = config.GRID_SIZE
-        if mode not in ["train", "eval", "test", "failCase1"]:
+        if mode not in ["train", "eval", "test", "failCase1", "failCase2"]:
             raise ValueError("mode must be valid")
 
         self.mode = mode
@@ -53,6 +53,11 @@ class SnakeEnv:
             self.ate_food = True
             self.score += 1
             self.food = self._spawn_food()
+        elif self.mode != "failCase2" and not self.done:
+            tail = self.snake.pop()
+            if tail in self.snake_set:
+                self.snake_set.remove(tail)
+            self.free_positions.add(tail)
 
         if self.timestep == self.max_steps:
             self.done = True
@@ -82,10 +87,11 @@ class SnakeEnv:
         if new_head in self.free_positions:
             self.free_positions.remove(new_head)
 
-        if not self.ate_food:
+        if self.mode == "failCase2" and not self.ate_food:
             tail = self.snake.pop()
             self.snake_set.remove(tail)
             self.free_positions.add(tail)
+
 
     # ========================
     # Environment updates
@@ -116,7 +122,7 @@ class SnakeEnv:
     # ========================
 
     def _compute_reward(self, mode):
-        if mode == "train" or mode == "eval":
+        if mode == "train" or mode == "eval" or mode == "failCase2":
             if self.done:
                 return config.REWARD_DEATH
             if self.ate_food:

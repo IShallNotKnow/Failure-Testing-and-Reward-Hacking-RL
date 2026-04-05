@@ -3,6 +3,15 @@ ENV_NAME = "SnakeEnv"
 MAX_STEPS = 500
 GRID_SIZE = 10
 ENV_MODE = "test"
+"""
+Environment modes:
+train
+test
+failCase2: original bug in stepping caused snake to not get longer. tail would delete always but head was never removed.
+Fixing the issue with this older model caused very interesting issues as it was learning to adapt to a newer 
+environment. Bug was kept due to unintended results which make it a good train/test environment to see how behavior 
+adapts.
+"""
 
 # --- Training ---
 TRAIN_EPISODES = 50000
@@ -31,3 +40,7 @@ REWARD_STEP_CASE1 = -0.1
 # --- Logging / Saving ---
 SAVE_MODEL = True
 TRAIN_MODEL_PATH = "models/tabular_q_saved_model.pth"
+FAIL_CASE_PATH_2 = "models/tabular_q_saved_model_fail_case2.pth"
+
+# --- Testing ---
+TEST_MODEL_PATH = TRAIN_MODEL_PATH
