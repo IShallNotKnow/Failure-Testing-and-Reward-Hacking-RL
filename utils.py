@@ -22,5 +22,25 @@ def eval_graphs(agent, env, episodes):
     plt.show()
     plt.close()
 
+def plot_training_eval(eval_rewards, eval_lengths):
+    episodes_r, rewards = zip(*eval_rewards)
+    episodes_l, lengths = zip(*eval_lengths)
 
+    plt.figure()
+    plt.plot(episodes_r, rewards)
+    plt.xlabel("Episode")
+    plt.ylabel("Avg Reward")
+    plt.title("Eval Reward During Training")
+    plt.savefig("plots/train_eval_reward.svg")
+    plt.show()
+    plt.close()
+
+    plt.figure()
+    plt.plot(episodes_l, lengths)
+    plt.xlabel("Episode")
+    plt.ylabel("Avg Episode Length")
+    plt.title("Eval Episode Length During Training")
+    plt.savefig("plots/train_eval_length.svg")
+    plt.show()
+    plt.close()
 

@@ -5,8 +5,8 @@ GRID_SIZE = 10
 ENV_MODE = "train"
 
 # --- Training ---
-TRAIN_EPISODES = 1000
-EVAL_INTERVAL = 10
+TRAIN_EPISODES = 50000
+EVAL_INTERVAL = 100
 
 # --- RL Hyperparameters ---
 GAMMA = 0.99
