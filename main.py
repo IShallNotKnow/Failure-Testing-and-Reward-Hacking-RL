@@ -3,18 +3,23 @@ from tabular_q_learning_agent import QLearningAgent
 from utils import plot_training_eval
 import config
 
+def train_eval(mode, agent):
+        env = SnakeEnv(mode)
+        eval_env = SnakeEnv("eval")
+        eval_rewards, eval_lengths = agent.train(env, eval_env)
+        print(f"Done. Final ε: {agent.exploration_rate:.4f}  Q-table: {len(agent.q_matrix):,} entries")
+
+        plot_training_eval(eval_rewards, eval_lengths)
+        return agent
 
 def main():
         if config.ENV_MODE == "train":
-                env = SnakeEnv(config.ENV_MODE)
-                eval_env = SnakeEnv("eval")
                 agent = QLearningAgent()
-                eval_rewards, eval_lengths = agent.train(env, eval_env)
-                print(f"Done. Final ε: {agent.exploration_rate:.4f}  Q-table: {len(agent.q_matrix):,} entries")
+                agent = train_eval(config.ENV_MODE, agent)
 
                 if (config.SAVE_MODEL):
                         agent.save_model(config.TRAIN_MODEL_PATH)
-                plot_training_eval(eval_rewards, eval_lengths)
+
 
         elif config.ENV_MODE == "test":
                 env = SnakeEnv(config.ENV_MODE)
@@ -31,6 +36,23 @@ def main():
                 print(f"Score: {env.score}")
                 agent.exploration_rate = eps
 
+        elif config.ENV_MODE == "failCase1":
+                agent = QLearningAgent()
+                agent.load_model(config.TRAIN_MODEL_PATH)
+                train_eval(config.ENV_MODE, agent)
+                agent.save_model(config.FAILCASE1_MODEL_PATH)
+
+        elif config.ENV_MODE == "failCase3":
+                agent = QLearningAgent()
+                agent.load_model(config.TRAIN_MODEL_PATH)
+                train_eval(config.ENV_MODE, agent)
+                agent.save_model(config.FAILCASE3_MODEL_PATH)
+
+        elif config.ENV_MODE == "failCase3":
+                agent = QLearningAgent()
+                agent.load_model(config.TRAIN_MODEL_PATH)
+                train_eval(config.ENV_MODE, agent)
+                agent.save_model(config.FAILCASE4_MODEL_PATH)
 
         else:
                 print("No mode specified. Use --train, --test, or fail cases.")

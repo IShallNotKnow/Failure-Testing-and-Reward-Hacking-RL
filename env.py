@@ -5,7 +5,7 @@ import config
 class SnakeEnv:
     def __init__(self, mode):
         self.size = config.GRID_SIZE
-        if mode not in ["train", "eval", "test", "failCase1", "failCase2"]:
+        if mode not in ["train", "eval", "test", "failCase1", "failCase2", "failCase3", "failCase4", "failCase5"]:
             raise ValueError("mode must be valid")
 
         self.mode = mode
@@ -133,12 +133,23 @@ class SnakeEnv:
                 return config.REWARD_DEATH_CASE1
             if self.ate_food:
                 if self.timestep < 30:
-                    return config.REWARD_FOOD_STEP1
+                    return config.REWARD_FOOD_CASE1_STEP1
                 elif 30 <= self.timestep <= 150:
-                    return config.REWARD_FOOD_STEP2
+                    return config.REWARD_FOOD_CASE1_STEP2
                 else:
-                    return config.REWARD_FOOD_STEP3
-            return config.REWARD_STEP_CASE1
+                    return config.REWARD_FOOD_CASE1_STEP3
+        elif mode == "failCase3":
+            if self.done:
+                return config.REWARD_DEATH_CASE3
+            if self.ate_food:
+                return config.REWARD_FOOD_CASE3
+            return config.REWARD_STEP_CASE3
+        elif mode == "failCase4":
+            if self.done:
+                return config.REWARD_DEATH_CASE4
+            if self.ate_food:
+                return config.REWARD_FOOD_CASE4
+            return config.REWARD_STEP_CASE4
 
     def _check_done(self):
         return self.done
