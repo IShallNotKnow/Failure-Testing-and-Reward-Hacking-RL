@@ -2,7 +2,7 @@
 
 - Train a model on a normal snake environment, then change the rule
 
-- Failure Case 1: 
+- Failure Case 1:
   - Change the rules to make it so that in the short run, getting fruits is actually bad. 
   - After a certain point, in the middle of the game, it actually becomes good though, but long run getting fruits becomes bad. 
   - It will try to end the game early, then keep going, and then going back to ending it early.

@@ -130,7 +130,12 @@ class SnakeEnv:
             return config.REWARD_STEP
         elif mode == "failCase1":
             if self.done:
-                return config.REWARD_DEATH_CASE1
+                if self.done:
+                    if self.timestep < 140:
+                        return config.REWARD_DEATH_CASE1_EARLY
+                    if 140 <= self.timestep <= 150:
+                        return config.REWARD_DEATH_CASE1_MID
+                return config.REWARD_DEATH_CASE1_LATE
             if self.ate_food:
                 if self.timestep < 30:
                     return config.REWARD_FOOD_CASE1_STEP1
@@ -138,6 +143,7 @@ class SnakeEnv:
                     return config.REWARD_FOOD_CASE1_STEP2
                 else:
                     return config.REWARD_FOOD_CASE1_STEP3
+            return config.REWARD_STEP_CASE1
         elif mode == "failCase3":
             if self.done:
                 return config.REWARD_DEATH_CASE3
@@ -150,6 +156,14 @@ class SnakeEnv:
             if self.ate_food:
                 return config.REWARD_FOOD_CASE4
             return config.REWARD_STEP_CASE4
+        elif mode == "failCase5":
+            food_x, food_y = self.food
+            head_x, head_y = self.snake[0]
+
+            food_left = int(food_x < head_x)
+            food_right = int(food_x > head_x)
+            food_up = int(food_y < head_y)
+            food_down = int(food_y > head_y)
 
     def _check_done(self):
         return self.done
@@ -237,6 +251,8 @@ class SnakeEnv:
         free_space_left = self._free_space(self.snake[0], left)
         free_space_right = self._free_space(self.snake[0], right)
 
+        timestep = self.timestep
+
         return (
             danger_straight,
             danger_left,
@@ -255,7 +271,8 @@ class SnakeEnv:
             dist_wall_right,
             free_space_straight,
             free_space_left,
-            free_space_right
+            free_space_right,
+            timestep
         )
 
     def set_mode(self, mode):

@@ -50,12 +50,9 @@ class QLearningAgent:
 
                 new_q = q_current + self.learning_rate * (target - q_current)
                 self.q_matrix[(state, action)] = new_q
-
-                if done:
-                    next_state = env.reset()
-
                 state = next_state
-                self.exploration_rate = max(config.EPSILON_END, self.exploration_rate * config.EPSILON_DECAY)
+
+            self.exploration_rate = max(config.EPSILON_END, self.exploration_rate * config.EPSILON_DECAY)
 
             if episode % 100 == 0:
                 print(f"Episode {episode} | ε: {self.exploration_rate:.4f} | Q-table: {len(self.q_matrix):,}")
@@ -64,8 +61,9 @@ class QLearningAgent:
                 avg_reward, avg_length = self._quick_eval(eval_env, config.EVAL_INTERVAL)
                 eval_rewards.append((episode, avg_reward))
                 eval_lengths.append((episode, avg_length))
-                print(
-                    f"Episode {episode} | ε: {self.exploration_rate:.4f} | Reward: {avg_reward:.2f} | Length: {avg_length:.1f}")
+                if episode % 100 == 0:
+                    print(
+                        f"Episode {episode} | ε: {self.exploration_rate:.4f} | Reward: {avg_reward:.2f} | Length: {avg_length:.1f}")
 
         return eval_rewards, eval_lengths
 
