@@ -18,17 +18,19 @@ adapts.
   
 - Failure Case 3: Risk Avoidance Gone Wrong
   - massive penalty for dying with small reward for living
+  - penalty for stalling out
   - agent refuses to take optimal paths
   - plays overly safe and inefficiently
 
 - Failure Case 4: Lazy Agent
   - small penalty per step
+  - removing the max step amount without needing to get a fruit
   - small reward for goal
   - "Doing nothing is safer"
 
 - Failure Case 5: Reward Hacking
   - loop near the goal forever
-  - farm “close distance” reward instead of finishing
+  - farm “close distance” reward instead of going for fruit
   - +3 for moving closer to goal 
   - +5 for reaching goal
 

@@ -4,7 +4,6 @@ import config
 import random
 import torch.optim as optim
 import numpy as np
-import torch.nn.functional as F
 from collections import deque
 
 class DQN(nn.Module):
@@ -79,9 +78,18 @@ class DQNAgent:
 
         current_q = self.policy_net(states).gather(1, actions.unsqueeze(1)).squeeze(1)
 
-        with torch.no_grad():
-            max_next_q = self.target_net(next_states).max(1)[0]
-            target_q = rewards + self.discount_factor * max_next_q * (1 - dones)
+        with torch.no_grad():        batch = self.replay_buffer.sample(batch_size)
+        states, actions, rewards, next_states, dones = zip(*batch)
+
+        states = torch.FloatTensor(states).to(self.device)
+        actions = torch.LongTensor([self.actions.index(a) for a in actions]).to(self.device)
+        rewards = torch.FloatTensor(rewards).to(self.device)
+        next_states = torch.FloatTensor(next_states).to(self.device)
+        dones = torch.FloatTensor(dones).to(self.device)
+
+        current_q = self.policy_net(states).gather(1, actions.unsqueeze(1)).squeeze(1)
+        max_next_q = self.target_net(next_states).max(1)[0]
+        target_q = rewards + self.discount_factor * max_next_q * (1 - dones)
 
         loss = nn.MSELoss()(current_q, target_q)
         self.optimizer.zero_grad()
@@ -110,10 +118,7 @@ class DQNAgent:
                 if target_update_counter % config.TARGET_UPDATE_FREQ == 0:
                     self.target_net.load_state_dict(self.policy_net.state_dict())
 
-            self.exploration_rate = max(config.EPSILON_END, self.exploration_rate * config.EPSILON_DECAY)
 
-            if episode % 500 == 0:
-                print(f"Episode {episode} | ε: {self.exploration_rate:.4f}")
 
             if eval_env and episode % config.EVAL_INTERVAL == 0:
                 avg_reward, avg_length = self._quick_eval(eval_env, config.EVAL_INTERVAL)
@@ -122,6 +127,8 @@ class DQNAgent:
                 if episode % 100 == 0:
                     print(
                         f"Episode {episode} | ε: {self.exploration_rate:.4f} | Reward: {avg_reward:.2f} | Length: {avg_length:.1f}")
+
+            self.exploration_rate = max(config.EPSILON_END, self.exploration_rate * config.EPSILON_DECAY)
 
         return eval_rewards, eval_lengths
 

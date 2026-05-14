@@ -69,7 +69,7 @@ class SnakeEnv:
         if self.timestep == self.max_steps:
             self.done = True
 
-        if self.steps_since_food > config.STEPS_SINCE_FOOD_MAX:
+        if self.steps_since_food > config.STEPS_SINCE_FOOD_MAX and self.mode != "failCase4":
             self.done = True
 
         return self._get_state(), self._compute_reward(self.mode), self.done, {"score": self.score}
@@ -214,6 +214,23 @@ class SnakeEnv:
 
         return steps
 
+    def _flood_fill(self, position):
+        visited = set()
+        queue = deque([position])
+        while queue:
+            pos = queue.popleft()
+            if pos in visited:
+                continue
+            x, y = pos
+            if x < 0 or x >= self.size or y < 0 or y >= self.size:
+                continue
+            if pos in self.snake_set and pos != self.snake[-1]:
+                continue
+            visited.add(pos)
+            for dx, dy in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                queue.append((x + dx, y + dy))
+        return len(visited)
+
     def _get_state(self):
         head_x, head_y = self.snake[0]
         food_x, food_y = self.food
@@ -234,6 +251,10 @@ class SnakeEnv:
         free_space_left = self._free_space(self.snake[0], left)
         free_space_right = self._free_space(self.snake[0], right)
 
+        accessible_space_straight = self._flood_fill((head_x + straight[0], head_y + straight[1]))
+        accessible_space_left = self._flood_fill((head_x + left[0], head_y + left[1]))
+        accessible_space_right = self._flood_fill((head_x + right[0], head_y + right[1]))
+
         timestep_bucket = self.timestep // 10
 
         return (
@@ -248,6 +269,10 @@ class SnakeEnv:
             free_space_straight,
             free_space_left,
             free_space_right,
+
+            accessible_space_straight,
+            accessible_space_left,
+            accessible_space_right,
 
             timestep_bucket
         )

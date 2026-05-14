@@ -30,7 +30,9 @@ def plot_training_eval(eval_rewards, eval_lengths, avg_reward_filename, avg_leng
     episodes_r, rewards = zip(*eval_rewards)
     episodes_l, lengths = zip(*eval_lengths)
 
-    def smooth(data, window=10):
+    def smooth(data, window=25):
+        if len(data) < window:
+            return np.array(data)
         return np.convolve(data, np.ones(window) / window, mode='valid')
 
     smoothed_rewards = smooth(rewards)
